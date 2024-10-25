@@ -4,7 +4,9 @@ const userSchema = Schema({
   email: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    lowercase: true,
+    trim: true
   },
   password: {
     type: String,
@@ -16,9 +18,11 @@ const userSchema = Schema({
   },
   level: {
     type: String,
-    default: "customer" // 2types : customer, admin
-  }},
-  {timestamps:true})
+    default: "customer",
+    enum: ["customer","admin"], // 2types : customer, admin
+    required: true
+  }
+},{timestamps:true})
 
 userSchema.methods.toJSON = function() {
   const obj = this._doc;
