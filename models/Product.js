@@ -32,6 +32,7 @@ const productSchema = Schema({
   },
   status: {
     type: String,
+    enum: ["active", "disactive"], // 허용된 값 목록
     default: "active"
   },
   isDeleted: {
