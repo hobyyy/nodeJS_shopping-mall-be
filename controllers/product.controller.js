@@ -1,6 +1,6 @@
 const Product = require('../models/Product')
 const productController = {};
-
+const PAGE_SIZE = 5;  // 한페이지당 몇개 보여줄지
 productController.createProduct = async(req,res) => {
   try {
     const {sku,name,size,image,category,description,price,stock,status} = req.body;
@@ -25,9 +25,19 @@ productController.getProducts = async(req,res) => {
     // }
     // => 검색조건 모두 합쳐보자
     const cond = name ? {name: {$regex:name, $options:'i'}} : {};
-    let query = Product.find(cond)
+    let query = Product.find(cond);
+    let response = {status:'success'};
+    if(page) {
+      query.skip((page-1)*PAGE_SIZE).limit(PAGE_SIZE);
+      // 전체 페이지
+      // = 전체 데이터 개수 / 페이지 사이즈(PAGE_SIZE)
+      const totalItemNum = await Product.countDocuments(cond);
+      const totalPageNum = Math.ceil(totalItemNum/PAGE_SIZE);
+      response.totalPageNum = totalPageNum;
+    }
     const products = await query.exec(); // query를 따로 실행
-    res.status(200).json({status: 'success', data: products})
+    response.data = products;
+    res.status(200).json(response);
   }catch(error) {
     res.status(400).json({status: 'fail', error: error.message})
   }
