@@ -24,7 +24,9 @@ productController.getProducts = async(req,res) => {
     //   const products = await Product.find({});
     // }
     // => 검색조건 모두 합쳐보자
-    const cond = name ? {name: {$regex:name, $options:'i'}} : {};
+    const cond = name 
+      ? {name: {$regex:name, $options:'i'}, isDeleted: false} 
+      : {isDeleted : false};
     let query = Product.find(cond);
     let response = {status:'success'};
     if(page) {
@@ -58,5 +60,19 @@ productController.updateProduct = async(req,res) => {
     res.status(400).json({status: 'fail', error: error.message});
   }
 }
+
+productController.deleteProduct = async(req,res) => {
+  try {
+    const productId = req.params.id;
+    const product = await Product.findByIdAndUpdate(
+      {_id: productId},
+      {isDeleted: true}
+    )
+    if(!product) throw new Error("item can't found");
+    else res.status(200).json({status:'success'});
+  }catch(error) {
+    res.status(400).json({status:'fail', error:error.message});
+  }
+};
 
 module.exports = productController;
