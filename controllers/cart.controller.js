@@ -1,6 +1,4 @@
-const { populate } = require('dotenv');
 const Cart = require('../models/Cart');
-const { model } = require('mongoose');
 
 const cartController = {};
 
