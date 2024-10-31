@@ -55,9 +55,9 @@ cartController.deleteCartItem = async (req, res) => {
     const { userId } = req;
     const cart = await Cart.findOne({ userId });
     cart.items = cart.items.filter((item) => !item._id.equals(id));
-
+    
     await cart.save();
-    res.status(200).json({ status: 200, cartItemQty: cart.items.length });
+    res.status(200).json({ status: 200, data: cart.items });
   } catch (error) {
     return res.status(400).json({ status: "fail", error: error.message });
   }
@@ -82,6 +82,26 @@ cartController.editCartItem = async (req, res) => {
     cart.items[index].qty = qty;
     await cart.save();
     res.status(200).json({ status: 200, data: cart.items });
+  } catch (error) {
+    return res.status(400).json({ status: "fail", error: error.message });
+  }
+};
+
+cartController.getCartQty = async (req, res) => {
+  try {
+    const { userId } = req;
+    const cart = await Cart.findOne({ userId: userId });
+    console.log('cart',cart);
+    if (!cart) throw new Error("There is no cart!");
+    else {
+      
+      // qty 합산
+      const qtyArray = cart.items.map(item => item.qty);
+      let totalQty = 0;
+      qtyArray.forEach(qty => totalQty += qty);      
+
+      res.status(200).json({ status: 200, qty: totalQty});
+    } 
   } catch (error) {
     return res.status(400).json({ status: "fail", error: error.message });
   }
