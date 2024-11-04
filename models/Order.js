@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 const User = require('./User');
 const Product = require('./Product');
 const Schema = mongoose.Schema;
-const cartSchema = Schema({
+
+const orderSchema = new Schema({
   userId: {
     type: mongoose.ObjectId,
     ref: User,
@@ -11,7 +12,7 @@ const cartSchema = Schema({
     type: String,
     required: true
   },
-  contact: {  // 연락처
+  contact: {
     type: String,
     required: true
   },
@@ -42,17 +43,19 @@ const cartSchema = Schema({
       required: true
     }
   }]
-},
-  {timestamps:true})
+}, 
+{ timestamps: true });
 
-cartSchema.methods.toJSON = function() {
+orderSchema.methods.toJSON = function() {
   const obj = this._doc;
   delete obj.password;
   delete obj.__v;
-  delete obj.updateAt;
-  delete obj.createAt;
+  delete obj.updatedAt;
+  delete obj.createdAt;
   return obj;
-}
+};
 
-const Cart = mongoose.model("Cart", cartSchema);
-module.exports = Cart;
+// Prevent OverwriteModelError by checking if model already exists
+const Order = mongoose.models.Order || mongoose.model('Order', orderSchema);
+
+module.exports = Order;
