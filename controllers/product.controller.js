@@ -107,12 +107,12 @@ productController.checkStock = async(item) => {
 
 }
 
-productController.checkItemListStock = async() => {
+productController.checkItemListStock = async(itemList) => {
   const insufficientStockItems = [];  // 재고가 불충분한 item을 저장할 예정
   
   // 재고 확인 로직
   await Promise.all(  // 비동기 처리를 여러개 한번에 빠르게 병렬 처리
-    itemList.map(async(item) => {
+    itemList.map(async (item) => {
       const stockCheck = await productController.checkStock(item);  // true or false
       if(!stockCheck.isVerify) {  // 재고가 없으면 item 저장
         insufficientStockItems.push({item, message: stockCheck.message});
