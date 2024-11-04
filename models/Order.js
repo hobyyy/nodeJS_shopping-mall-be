@@ -24,6 +24,10 @@ const orderSchema = new Schema({
     type: String,
     default: "active"
   },
+  orderNum: { // orderNum 필드 추가
+    type: String,
+    required: true
+  },
   items: [{
     productId: {
       type: mongoose.ObjectId,
