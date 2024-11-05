@@ -2,6 +2,7 @@ const orderController = {};
 const Order = require('../models/Order');
 const productController = require('./product.controller');
 const {randomStringGenerator} = require('../utils/randomStringGenerator');
+const PAGE_SIZE = 5;  // 한페이지당 몇개 보여줄지
 
 orderController.createOrder = async(req,res) => {
   try {
@@ -39,5 +40,32 @@ orderController.createOrder = async(req,res) => {
     res.status(400).json({status: 'fail', error: error.message});
   }
 };
+
+orderController.getOrderList = async(req,res) => {
+  try {
+    const {userId} = req;
+    const { page = 1 } = req.query; // page 기본값을 1로 설정 // orderNum 추가 해야함@@
+
+    // 전체 주문 개수를 계산해 총 페이지 수를 구합니다
+    const totalItemNum = await Order.countDocuments({ userId });
+    const totalPageNum = Math.ceil(totalItemNum / PAGE_SIZE);
+
+    // 주문 목록을 페이지네이션하여 가져옵니다
+    const orderList = await Order.find({ userId })
+      .skip((page - 1) * PAGE_SIZE)
+      .limit(PAGE_SIZE)
+      .populate({
+        path: "items",
+        populate: {
+          path: "productId",
+          model: "Product",
+          select: "image name",
+        },
+      });
+    res.status(200).json({status: 'success', data: orderList, totalPageNum});
+  } catch (error) {
+    res.status(400).json({status: 'fail', error: error.message});    
+  }
+}
 
 module.exports = orderController;

@@ -23,7 +23,8 @@ const orderSchema = new Schema({
   },
   status: {
     type: String,
-    default: "active"
+    enum: ["preparing", "shipping", "delivered", "refund"], // 허용된 값 목록
+    default: "preparing"
   },
   orderNum: { // orderNum 필드 추가
     type: String,
@@ -55,8 +56,8 @@ orderSchema.methods.toJSON = function() {
   const obj = this._doc;
   delete obj.password;
   delete obj.__v;
-  delete obj.updatedAt;
-  delete obj.createdAt;
+  // delete obj.updatedAt;
+  // delete obj.createdAt;
   return obj;
 };
 
