@@ -32,6 +32,8 @@ orderController.createOrder = async(req,res) => {
       orderNum: randomStringGenerator() // random한 번호를 뽑아서 orderNum 지정
     })
     await newOrder.save();
+    // save한 후에 쇼핑백을 비워주기 : Order.js에서 처리
+
     res.status(200).json({status: 'success', orderNum: newOrder.orderNum});
   } catch (error) {
     res.status(400).json({status: 'fail', error: error.message});

@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const User = require('./User');
 const Product = require('./Product');
+const Cart = require('./Cart');
 const Schema = mongoose.Schema;
 
 const orderSchema = new Schema({
@@ -59,7 +60,13 @@ orderSchema.methods.toJSON = function() {
   return obj;
 };
 
-// Prevent OverwriteModelError by checking if model already exists
+orderSchema.post('save', async function() {
+  // 쇼핑백 비우기
+  const cart = await Cart.findOne({userId:this.userId});
+  cart.items = [];
+  await cart.save();
+})
+
 const Order = mongoose.models.Order || mongoose.model('Order', orderSchema);
 
 module.exports = Order;
