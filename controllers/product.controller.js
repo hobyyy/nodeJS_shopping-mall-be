@@ -1,6 +1,7 @@
 const Product = require('../models/Product')
 const productController = {};
 const PAGE_SIZE = 5;  // 한페이지당 몇개 보여줄지
+
 productController.createProduct = async(req,res) => {
   try {
     const {sku,name,size,image,category,description,price,stock,status} = req.body;
@@ -86,25 +87,25 @@ productController.deleteProduct = async(req,res) => {
   }
 };
 
-// item 하나하나마다 재고가 있는지 확인해주는 함수
-productController.checkStock = async(item) => {
-  // 내가 사려는 재고 정보 들고오기
+productController.checkStockAvailability = async (item) => {
   const product = await Product.findById(item.productId);
 
-  // 내가 사려는 item qty, 재고 비교
-  if(product.stock[item.size] < item.qty) {
-    // 재고가 부족하면 메세지와 함께 데이터 반환
-    return {isVerify: false, message: `${product.name}의 ${item.size}재고가 부족합니다.`};
-  }else {
-    // 재고가 충분하면 재고에서 qty만큼 빼주고 저장
-    const newStock = {...product.stock};
+  // 재고가 부족하면 false와 메세지 반환
+  if (product.stock[item.size] < item.qty) {
+    return { isVerify: false, message: `${product.name}의 ${item.size} 재고가 부족합니다.` };
+  }
+  return { isVerify: true }; // 재고가 충분하면 true 반환
+};
+
+// 모든 아이템의 재고가 충분하다면 실행되는 함수 : item 하나하나 재고 차감
+productController.reduceStock = async(itemList) => {
+  for (const item of itemList) {
+    const product = await Product.findById(item.productId);
+    const newStock = { ...product.stock };
     newStock[item.size] -= item.qty;
     product.stock = newStock;
-    await product.save()
-    // 재고가 충분하면 성공 반환
-    return {isVerify: true};
+    await product.save();
   }
-
 }
 
 productController.checkItemListStock = async(itemList) => {
@@ -113,13 +114,23 @@ productController.checkItemListStock = async(itemList) => {
   // 재고 확인 로직
   await Promise.all(  // 비동기 처리를 여러개 한번에 빠르게 병렬 처리
     itemList.map(async (item) => {
-      const stockCheck = await productController.checkStock(item);  // true or false
+      // const stockCheck = await productController.checkStock(item);  // true or false
+      const stockCheck = await productController.checkStockAvailability(item);
+
       if(!stockCheck.isVerify) {  // 재고가 없으면 item 저장
         insufficientStockItems.push({item, message: stockCheck.message});
       }else return stockCheck;
     })  
   )
-  return insufficientStockItems
+
+  // 재고가 부족한 아이템이 있으면 모든 재고 차감을 취소
+  if (insufficientStockItems.length > 0) {
+    return insufficientStockItems;  // 재고가 부족한 항목을 반환하여 실패 처리
+  }
+
+  // 모든 아이템의 재고가 충분하다면 재고 차감
+  await productController.reduceStock(itemList);
+  return [];  // 빈 배열 반환 (모든 재고 차감 성공)
 }
 
 module.exports = productController;
