@@ -5,5 +5,6 @@ const router = express.Router();
 
 router.post('/',authController.authenticate, orderController.createOrder);
 router.get("/me", authController.authenticate, orderController.getOrderList);
-
+router.get('/', authController.authenticate, orderController.getOrderList);
+router.put('/:id', authController.authenticate, authController.checkAdminPermission, orderController.updateOrder);
 module.exports = router;
