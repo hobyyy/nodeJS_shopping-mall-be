@@ -4,8 +4,8 @@ const PAGE_SIZE = 5;  // 한페이지당 몇개 보여줄지
 
 productController.createProduct = async(req,res) => {
   try {
-    const {sku,name,size,image,category,description,price,stock,status} = req.body;
-    const product = new Product({sku,name,size,image,category,description,price,stock,status});
+    const {sku,name,size,image,category,description,price,stock,status,sale} = req.body;
+    const product = new Product({sku,name,size,image,category,description,price,stock,status,sale});
 
     await product.save();
     res.status(200).json({status:'success', product});
@@ -69,6 +69,48 @@ productController.updateProduct = async(req,res) => {
     if(!product) throw new Error("item doesn't exist");
     else res.status(200).json({status: 'success', data: product});
   }catch {
+    res.status(400).json({status: 'fail', error: error.message});
+  }
+}
+
+productController.updateSale = async(req,res) => {
+  try {
+    const productId = req.params.id;
+    const {sale} = req.body;
+    console.log('sale',sale)
+    const updatedProduct = await Product.findByIdAndUpdate(
+      productId, {
+        $set: { sale: sale },
+      },{ new: true } // 업데이트 후의 데이터를 반환
+    )
+    console.log('updatedProduct',updatedProduct)
+    if(!updatedProduct){
+      return res.status(404).json({status: 'fail', error: 'could not find item'})
+    }
+    res.status(200).json({status: 'success', data: updatedProduct});
+
+    // // 현재 제품을 가져와서 가격을 계산
+    // const product = await Product.findById(productId);
+    // if (!product) {
+    //   return res.status(404).json({ status: 'fail', error: 'could not find item' });
+    // }
+
+    // // 할인율을 반영하여 새로운 가격을 계산
+    // const discountedPrice = product.price * (1 - sale / 100);
+    // console.log('discountedPrice',discountedPrice)
+
+    // // `sale`과 `price` 둘 다 업데이트
+    // const updatedProduct = await Product.findByIdAndUpdate(
+    //   productId,
+    //   {
+    //     $set: { sale: sale, price: discountedPrice },
+    //   },
+    //   { new: true }
+    // );
+
+    // console.log('updatedProduct', updatedProduct);
+    // res.status(200).json({ status: 'success', data: updatedProduct });
+  } catch (error) {
     res.status(400).json({status: 'fail', error: error.message});
   }
 }

@@ -35,6 +35,10 @@ const productSchema = Schema({
     enum: ["active", "inactive"], // 허용된 값 목록
     default: "active"
   },
+  sale: {
+    type: Number,
+    default: 0,
+  },
   isDeleted: {
     type: Boolean,
     default: "false"

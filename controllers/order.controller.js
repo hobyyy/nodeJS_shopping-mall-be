@@ -9,7 +9,7 @@ orderController.createOrder = async(req,res) => {
     // fe에서 데이터 보낸거 받아오기
     // userId, shipTo, contact, totalPrice, orderList
     const {userId} = req;
-    const {shipTo, contact, totalPrice, orderList} = req.body;
+    const {shipTo, contact, totalPrice, orderList, sale} = req.body;
 
     // 재고 확인 & 업데이트
     const insufficientStockItems = await productController.checkItemListStock(orderList); // 재고가 불충분한 item list 받기
@@ -30,7 +30,8 @@ orderController.createOrder = async(req,res) => {
       shipTo: JSON.stringify(shipTo), // shipTo 객체를 JSON 문자열로 변환
       contact: JSON.stringify(contact), // contact 객체를 JSON 문자열로 변환
       items: orderList,
-      orderNum: randomStringGenerator() // random한 번호를 뽑아서 orderNum 지정
+      orderNum: randomStringGenerator(), // random한 번호를 뽑아서 orderNum 지정
+      sale
     })
     await newOrder.save();
     // save한 후에 쇼핑백을 비워주기 : Order.js에서 처리
@@ -62,7 +63,7 @@ orderController.getOrderList = async(req,res) => {
         populate: {
           path: "productId",
           model: "Product",
-          select: "image name",
+          select: "image name sale",
         },
       })
       .skip((page - 1) * PAGE_SIZE)
