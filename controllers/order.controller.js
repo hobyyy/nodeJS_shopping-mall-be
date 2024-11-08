@@ -82,14 +82,11 @@ orderController.updateOrder = async(req,res) => {
   try {
     const {id} = req.params;
     const {status} = req.body;
-    console.log('id',id)
-    console.log('status',status)
     const order = await Order.findByIdAndUpdate(
       id,
       {status: status},
       {new: true}
     );
-    console.log('order',order)
 
     if(!order) throw new Error('can not find order');
     res.status(200).json({status: 'success', data: order});
