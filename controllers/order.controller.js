@@ -2,7 +2,8 @@ const orderController = {};
 const Order = require('../models/Order');
 const productController = require('./product.controller');
 const {randomStringGenerator} = require('../utils/randomStringGenerator');
-const PAGE_SIZE = 3;  // 한페이지당 몇개 보여줄지
+const PAGE_SIZE = 7;  // 한페이지당 몇개 보여줄지
+const ADMIN_PAGE_SIZE = 3;  // 한페이지당 몇개 보여줄지
 
 orderController.createOrder = async(req,res) => {
   try {
@@ -42,11 +43,38 @@ orderController.createOrder = async(req,res) => {
   }
 };
 
-orderController.getOrderList = async(req,res) => {
+// 내주문 목록 조회
+orderController.getMyOrders = async (req, res) => {
   try {
-    const {userId} = req;
+    const { userId } = req;
     const { page = 1, orderNum } = req.query; // page 기본값을 1로 설정
 
+    // 검색조건 합치기
+    let cond = { userId };
+    if (orderNum) {
+      cond.orderNum = { $regex: orderNum, $options: 'i' };
+    }
+
+    // 주문 목록을 페이지네이션하여 가져옵니다
+    const orderList = await Order.find(cond)
+      .populate("items.productId")
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * PAGE_SIZE)
+      .limit(PAGE_SIZE)
+
+    // 전체 주문 개수를 계산해 총 페이지 수를 구합니다
+    const totalItemNum = await Order.find(cond).countDocuments();
+    const totalPageNum = Math.ceil(totalItemNum / PAGE_SIZE);
+    res.status(200).json({ status: "success", data: orderList, totalPageNum});
+  } catch (error) {
+    return res.status(400).json({ status: "fail", error: error.message });
+  }
+};
+
+// admin페이지 주문 목록 조회
+orderController.getOrderList = async(req,res) => {
+  try {
+    const { page = 1, orderNum } = req.query; // page 기본값을 1로 설정
     // 검색조건 합치기
     let cond = {};
     if(orderNum) {
@@ -57,7 +85,6 @@ orderController.getOrderList = async(req,res) => {
 
     // 주문 목록을 페이지네이션하여 가져옵니다
     const orderList = await Order.find(cond)
-      .populate('userId')
       .populate({
         path: "items",
         populate: {
@@ -66,12 +93,12 @@ orderController.getOrderList = async(req,res) => {
           select: "image name sale",
         },
       })
-      .skip((page - 1) * PAGE_SIZE)
-      .limit(PAGE_SIZE)
+      .skip((page - 1) * ADMIN_PAGE_SIZE)
+      .limit(ADMIN_PAGE_SIZE)
 
     // 전체 주문 개수를 계산해 총 페이지 수를 구합니다
     const totalItemNum = await Order.find(cond).countDocuments();
-    const totalPageNum = Math.ceil(totalItemNum / PAGE_SIZE);
+    const totalPageNum = Math.ceil(totalItemNum / ADMIN_PAGE_SIZE);
       
     res.status(200).json({status: 'success', data: orderList, totalPageNum});
   } catch (error) {
